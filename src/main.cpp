@@ -6,7 +6,7 @@
 #define MODE_X1      51
 #define MODE_X5     255
 #define MODE_X10    510
-#define CALIBRATE   210
+#define CALIBRATE   215
 
 volatile int interruptCounter = 0;
 
@@ -33,7 +33,8 @@ int16_t calculateMovingAverage() {
     return sum * 60 / TIMES * 2;
 }
 
-void setup() {
+void setup()
+{
     Serial.begin(115200);
     pinMode(selX10, INPUT_PULLUP);
     pinMode(selX5,  INPUT_PULLUP);
@@ -43,6 +44,31 @@ void setup() {
     pinMode(dacPin, OUTPUT);
 }
 
+void testWrite(uint16_t cpm)
+{
+    double value = log10(cpm) * 100.0;
+    int dacValue = map(int(value), 0, 420, 0, CALIBRATE);
+    dacWrite(dacPin, dacValue);
+}
+
+#if 0 
+void loop()
+{
+
+    testWrite(1);
+    delay(1000);    
+    testWrite(10);
+    delay(1000);    
+    testWrite(100);
+    delay(1000);    
+    testWrite(1000);
+    delay(1000);    
+    testWrite(10000);
+    delay(1000);    
+}
+#endif
+
+#if 1
 void loop() {
     unsigned long currentTime = millis();
 
@@ -55,7 +81,7 @@ void loop() {
 
         // 移動平均を計算
         int16_t cpm = calculateMovingAverage();
-
+/*
         // DAC値に変換して出力
         if          (digitalRead(selX1) == LOW) {      //  X1 mode
             maxCPM = MODE_X1;
@@ -65,13 +91,17 @@ void loop() {
             maxCPM = MODE_X10;
         }
         cpm = min(cpm, maxCPM);
-        int dacValue = map(cpm, 0, maxCPM, 0, CALIBRATE);
+*/
+        double value = log10(cpm) * 100.0;
+
+        int dacValue = map(int(value), 0, 420, 0, CALIBRATE);
         dacWrite(dacPin, dacValue);
-        Serial.printf("maxCPM = %d, cpm = %d, dacValue = %d\n", maxCPM, cpm, dacValue);
+        Serial.printf("cpm = %d, dacValue = %d\n", cpm, dacValue);
 
         // インデックスを更新
         currentIndex = (currentIndex + 1) % TIMES;
     }
 }
+#endif
 
 
